@@ -11,9 +11,9 @@ def insert_school(mongo_collection, **kwargs):
         'mongo_collection' will be the pymongo collection object.
         Returns the new '_id'.
     """
-    _id = mongo_collection.insert_one(kwargs)
+    result = mongo_collection.insert_one(kwargs)
 
-    return _id
+    return result.inserted_id
 
 
 if __name__ == "__main__":
