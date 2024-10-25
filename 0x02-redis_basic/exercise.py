@@ -10,7 +10,7 @@ from typing import Union
 
 class Cache:
     """ Class containing the 'store' method. """
-    def __init__(self: "Cache") -> None:
+    def __init__(self) -> None:
         """
             init method for the 'Cache' class. Stores an
             instance of Redis as a private variable and
@@ -20,7 +20,7 @@ class Cache:
         self._redis.flushdb()
 
     def store(
-            self: "Cache",
+            self,
             data: Union[str, bytes, int, float]) -> str:
         random_key = str(uuid.uuid4())
         self._redis.set(random_key, data)
