@@ -2,7 +2,6 @@
 """ Module containing the 'Cache' class. """
 
 
-import random
 import redis
 import uuid
 from typing import Union
