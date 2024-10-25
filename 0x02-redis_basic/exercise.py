@@ -25,4 +25,4 @@ class Cache:
         random_key = str(uuid.uuid4())
         self._redis.set(random_key, data)
 
-        return str(random_key)
+        return random_key
