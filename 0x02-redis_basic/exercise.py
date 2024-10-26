@@ -31,6 +31,24 @@ def count_calls(method: Callable) -> Callable:
 
     return wrapper
 
+def replay(method: Callable) -> None:
+    """ Displays the history of calls of a particular function. """
+    redis_instance = method.__self__._redis  # Access the Redis instance
+    inputs_key = f"{method.__qualname__}:inputs"
+    outputs_key = f"{method.__qualname__}:outputs"
+
+    # Get the number of calls from Redis
+    call_count = redis_instance.llen(inputs_key)
+    print(f"{method.__qualname__} was called {call_count} times:")
+
+    # Retrieve inputs and outputs from Redis
+    inputs = redis_instance.lrange(inputs_key, 0, -1)
+    outputs = redis_instance.lrange(outputs_key, 0, -1)
+
+    # Display each call with its input and output
+    for input_value, output_value in zip(inputs, outputs):
+        print(f"{method.__qualname__}(*{input_value.decode('utf-8')}) -> {output_value.decode('utf-8')}")
+
 
 class Cache:
     """ Class containing the 'store' method. """
