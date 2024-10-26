@@ -8,6 +8,19 @@ from functools import wraps
 from typing import Any, Callable, Optional, Union
 
 
+def call_history(method: Callable) -> Callable:
+    """ Stores the history of inputs and outputs for a particular function. """
+    @wraps(method)
+    def wrapper(self, *args) -> Any:
+        """ Invokes the given method after storing the history of inputs and outputs. """
+        output = method(self, *args)
+
+        self._redis.rpush("{}:inputs".format(method.__qualname__), str(args))
+        self._redis.rpush("{}:outputs".format(method.__qualname__), output)
+        return output
+
+    return wrapper
+
 def count_calls(method: Callable) -> Callable:
     """ Increases call count every time method is called. """
     @wraps(method)
@@ -15,6 +28,7 @@ def count_calls(method: Callable) -> Callable:
         """ Invokes the given method after incrementing its call counter. """
         self._redis.incr(method.__qualname__)
         return method(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -29,6 +43,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb()
 
+    @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         random_key = str(uuid.uuid4())
