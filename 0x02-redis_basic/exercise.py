@@ -12,7 +12,8 @@ def call_history(method: Callable) -> Callable:
     """ Stores the history of inputs and outputs for a particular function. """
     @wraps(method)
     def wrapper(self, *args) -> Any:
-        """ Invokes the given method after storing the history of inputs and outputs. """
+        """ Invokes the given method after storing the history
+        of inputs and outputs. """
         output = method(self, *args)
 
         self._redis.rpush("{}:inputs".format(method.__qualname__), str(args))
@@ -20,6 +21,7 @@ def call_history(method: Callable) -> Callable:
         return output
 
     return wrapper
+
 
 def count_calls(method: Callable) -> Callable:
     """ Increases call count every time method is called. """
@@ -30,6 +32,7 @@ def count_calls(method: Callable) -> Callable:
         return method(self, *args, **kwargs)
 
     return wrapper
+
 
 def replay(method: Callable) -> None:
     """ Displays the history of calls of a particular function. """
@@ -47,7 +50,9 @@ def replay(method: Callable) -> None:
 
     # Display each call with its input and output
     for input_value, output_value in zip(inputs, outputs):
-        print(f"{method.__qualname__}(*{input_value.decode('utf-8')}) -> {output_value.decode('utf-8')}")
+        print(
+            f"{method.__qualname__}(*{input_value.decode('utf-8')}) -> \
+                    {output_value.decode('utf-8')}")
 
 
 class Cache:
@@ -64,13 +69,19 @@ class Cache:
     @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
+        """ Takes a 'data' argument and returns a string. """
         random_key = str(uuid.uuid4())
         self._redis.set(random_key, data)
 
         return random_key
 
-    def get(self, key: str, fn: Optional[Callable] = None) -> Union[str, bytes, int, float, None]:
-        """Retrieve the stored data, using an optional callable `fn` for conversion."""
+    def get(
+            self,
+            key: str,
+            fn: Optional[Callable] = None) -> \
+            Union[str, bytes, int, float, None]:
+        """Retrieve the stored data, using an optional callable
+        `fn` for conversion."""
         value = self._redis.get(key)
 
         if not value:
@@ -81,9 +92,9 @@ class Cache:
         return value
 
     def get_str(self, key: str) -> str:
-        """Retrieve data as a string."""
+        """Retrieves data as a string."""
         return self.get(key, fn=lambda x: x.decode('utf-8'))
 
     def get_int(self, key: str) -> int:
-        """Retrieve data as an integer."""
+        """Retrieves data as an integer."""
         return self.get(key, fn=int)
