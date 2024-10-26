@@ -5,13 +5,14 @@
 import redis
 import uuid
 from functools import wraps
-from typing import Callable, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 
 def count_calls(method: Callable) -> Callable:
     """ Increases call count every time method is called. """
-    @wraps(method: Callable)
-    def wrapper(self, *args, **kwargs):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs) -> Any:
+        """ Invokes the given method after incrementing its call counter. """
         self._redis.incr(method.__qualname__)
         return method(self, *args, **kwargs)
     return wrapper
