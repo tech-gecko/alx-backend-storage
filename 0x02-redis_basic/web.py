@@ -1,24 +1,38 @@
 #!/usr/bin/env python3
-from datetime import timedelta
+'''A module with tools for request caching and tracking.
+'''
 import redis
 import requests
+from functools import wraps
+from typing import Callable
 
 
+redis_store = redis.Redis()
+'''The module-level Redis instance.
+'''
+
+
+def data_cacher(method: Callable) -> Callable:
+    '''Caches the output of fetched data.
+    '''
+    @wraps(method)
+    def invoker(url) -> str:
+        '''The wrapper function for caching the output.
+        '''
+        redis_store.incr(f'count:{url}')
+        result = redis_store.get(f'result:{url}')
+        if result:
+            return result.decode('utf-8')
+        result = method(url)
+        redis_store.set(f'count:{url}', 0)
+        redis_store.setex(f'result:{url}', 10, result)
+        return result
+    return invoker
+
+
+@data_cacher
 def get_page(url: str) -> str:
-    """Obtains the HTML content of a particular URL and returns it."""
-    r = redis.Redis()
-
-    r.set(f'count:{url}', 0)
-
-    if not r.exists(f'html:{url}'):
-        html = requests.get(url).text
-        r.setex(
-            f'html:{url}',
-            timedelta(seconds=10),
-            html
-        )
-        r.incr(f'count:{url}')
-
-    html = r.get(f'html:{url}').decode('utf-8')
-
-    return html
+    '''Returns the content of a URL after caching the request's response,
+    and tracking the request.
+    '''
+    return requests.get(url).text
